@@ -1,0 +1,47 @@
+package ch5;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.util.concurrent.BlockingQueue;
+
+/**
+ * Created by Artyom Zheltyshev on 08.02.2026
+ */
+public class FileCrawler implements Runnable {
+
+    private final BlockingQueue<File> fileQueue;
+    private final FileFilter fileFilter;
+    private final File root;
+
+    public FileCrawler(BlockingQueue<File> fileQueue, FileFilter fileFilter, File root) {
+        this.fileQueue = fileQueue;
+        this.fileFilter = fileFilter;
+        this.root = root;
+    }
+
+    @Override
+    public void run() {
+        try {
+            crawl(root);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void crawl(File dir) throws InterruptedException {
+        File[] entries = dir.listFiles(fileFilter);
+        if (entries != null) {
+            for (File entry : entries) {
+                if (entry.isDirectory()) {
+                    crawl(entry);
+                } else if (!alreadyIndexed(entry)) {
+                    fileQueue.put(entry);
+                }
+            }
+        }
+    }
+
+    private boolean alreadyIndexed(File file) {
+        return false;
+    }
+}
